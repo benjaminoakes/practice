@@ -1,11 +1,12 @@
 {
-  "name": "conway-js",
+  "name": "huffman",
   "version": "0.0.1",
   "private": true,
 
   "devDependencies": {
     "coffee-script": "1.2.0",
     "docco": "0.3.0",
+    "hbs": "1.0.1",
     "jasmine-node": "1.0.17",
     "jshint": "0.5.6"
   }
