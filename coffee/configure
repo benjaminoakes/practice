@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -o errexit
+
+# Bootstrap
+curl -so .roboconf.sh https://raw.github.com/benjaminoakes/roboconf/master/roboconf.sh
+source .roboconf.sh
+
+roboconf-npm
+
+# For `docco`
+roboconf-check python
+roboconf-check easy_install
+easy_install Pygments

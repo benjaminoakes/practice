@@ -1,0 +1,3 @@
+#!/usr/bin/env coffee
+Huffman = require('../lib/huffman')
+Huffman.app.run(process)
