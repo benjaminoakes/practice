@@ -11,6 +11,6 @@ doc:
 	docco `find lib -name "*.coffee"` `find spec -name "*.coffee"`
 
 clean:
-	rm -rf public/build
+	rm -rf build
 	rm -rf docs
 	rm -rf node_modules
