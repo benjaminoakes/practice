@@ -206,18 +206,20 @@ templates =
     Compressed:  {{compressionPercentage}}
     """
 
-controller =
+controller = do ->
+  render = (template, data) ->
+    fn = Handlebars.compile(template)
+    fn(data)
+
   usage: (argv) ->
-    fn = Handlebars.compile(templates.usage)
-    fn(programName: argv[0])
+    render(templates.usage, programName: argv[0])
 
   encoded: (argv) ->
     string = argv[1]
     # TODO: encoded = encoder.encode(string)
     encoded = '01101010111110001000'
     data = presenter.present(string, encoded)
-    fn = Handlebars.compile(templates.encoded)
-    fn(data)
+    render(templates.encoded, data)
 
 app =
   run: (process) ->
