@@ -194,12 +194,12 @@ templates =
 
   encoded: """
     Encoded:
-    {{encodedString}}
+    {{{encodedString}}}
     Encoded Bytes:
     {{encodedByteCount}}
     
     Original:
-    {{originalString}}
+    {{{originalString}}}
     Original Bytes:
     {{originalByteCount}}
     
