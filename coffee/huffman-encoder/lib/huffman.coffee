@@ -71,36 +71,76 @@
 #     
 #     Compressed:  28%
 
+Handlebars = require('hbs')
+
 helper =
   frequencies: (string) ->
-    # A: 5
-    # R: 3
-    # B: 2
-    # K: 1
+    count = (a, e) ->
+      if a[e]
+        a[e] += 1
+      else
+        a[e] = 1
+      
+      a
+
+    string.split('').reduce(count, {})
 
   tree: (frequencies) ->
-    # value: 'ARBK',
-    # left:
-    #   value: 'A'
-    # right:
-    #   value: 'RBK'
-    #   left:
-    #     value: 'R'
-    #   right:
-    #     value: 'BK'
-    #     left:
-    #       value: 'B'
-    #     right:
-    #       value: 'K'
-  
+    root = null
+
+    node = (v, l, r) ->
+      left: l
+      value: v
+      right: r
+
+    # TODO
+    #
+    # sorted = Object.keys(frequencies).sort (l, r) ->
+    #   frequencies[l] > frequencies[r]
+    # 
+    # push = (tree, value) ->
+    #   cat = root.value + value
+    #   root = node(value, node, tree)
+
+    # sorted.forEach (char) ->
+    #   push(root, char)
+    #
+    # root
+
+    node(
+      'ARBK',
+      node('A')
+      node(
+        'RBK'
+        node('R')
+        node(
+          'BK',
+          node('B'),
+          node('K')
+        )
+      )
+    )
+
   encodings: (tree) ->
-    # A:   '0'
-    # R:  '10'
-    # B: '110'
-    # K: '111'
+    # Depth-first search
+    dfs = (codes, path, node) ->
+      if (l = node.left)
+        dfs(codes, path.concat(0), l)
+      else
+        # Normal DFS would always do this in the middle, but we only want it in this case.
+        codes[node.value] = path.join('')
+
+      if (r = node.right)
+        dfs(codes, path.concat(1), r)
+
+      codes
+    
+    dfs({}, [], tree)
 
 encoder =
   encode: (string) ->
+    # TODO:
+
     # fs = helper.frequencies(string)
     # t = helper.tree(fs)
     # encodings = helper.encodings(t)
@@ -109,18 +149,34 @@ encoder =
     # '01101010111110001000'
 
 presenter = do ->
-  ratio = (string, encoded) ->
-    # 0.8
+  ratio = (a, b) ->
+     1 - (a / b)
   
-  bytes = (bitstring) ->
-    # ['01101010', '11111000', '10000000']
+  percentage = (float) ->
+    String(Math.floor(float * 100)) + '%'
+  
+  bytesFromBits = (bitstring) ->
+    length = 8
 
-  present: (string, encoded) ->
-    # originalString: 'ABRRKBAARAA'
-    # originalByteCount: 11
-    # encodedString: '01101010 11111000 10000000'
-    # encodedByteCount: 3
-    # compressionPercentage: '80%'
+    a = for i in [0..2]
+      start = i * length
+      finish = start + length
+      bitstring.slice(start, finish)
+    
+    last = a.pop()
+    pad = length - last.length
+    last += Array(pad + 1).join('0')
+
+    a.concat(last)
+
+  present: (original, encoded) ->
+    bytes = bytesFromBits(encoded)
+
+    originalString: original
+    originalByteCount: original.length
+    encodedString: bytes.join(' ')
+    encodedByteCount: bytes.length
+    compressionPercentage: percentage(ratio(bytes.length, original.length))
 
 templates =
   usage: """
@@ -152,29 +208,33 @@ templates =
 
 controller =
   usage: (argv) ->
-    # Handlebars.compile(templates.usage, programName: argv[0])
+    fn = Handlebars.compile(templates.usage)
+    fn(programName: argv[0])
 
   encoded: (argv) ->
-    # string = argv[1]
-    # encoded = encoder.encode(string)
-    # data = presenter.present(string, encoded)
-    # Handlebars.compile(templates.encoded, data)
+    string = argv[1]
+    # TODO: encoded = encoder.encode(string)
+    encoded = '01101010111110001000'
+    data = presenter.present(string, encoded)
+    fn = Handlebars.compile(templates.encoded)
+    fn(data)
 
 app =
   run: (process) ->
-    # # Make argv more UNIX-y
-    # argv = process.argv.slice(2)
-    # argv.unshift(process.env['_'])
+    # Make argv more UNIX-y
+    argv = process.argv.slice(2)
+    argv.unshift(process.env['_'])
 
-    # if (1 == argv.length) || (argv.indexOf('--help') >= 0)
-    #   rendered = controller.usage(argv)
-    # else
-    #   rendered = controller.encoded(argv)
-    # 
-    # console.log(rendered)
+    if (1 == argv.length) || (argv.indexOf('--help') >= 0)
+      rendered = controller.usage(argv)
+    else
+      rendered = controller.encoded(argv)
+    
+    console.log(rendered)
 
 module.exports =
   helper: helper
+  controller: controller
   encoder: encoder
   presenter: presenter
   app: app
